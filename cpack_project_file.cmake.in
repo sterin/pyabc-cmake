@@ -1,0 +1,9 @@
+include(@CMAKE_CURRENT_SOURCE_DIR@/cmake/package_rules.cmake)
+
+pyabc_get_version(@CMAKE_CURRENT_SOURCE_DIR@ version)
+pyabc_get_system_name(system_name)
+
+set(CPACK_PACKAGE_FILE_NAME "@CMAKE_PROJECT_NAME@-${version}-${system_name}-@CMAKE_BUILD_TYPE@")
+
+set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY 0)
+set(CPACK_PACKAGING_INSTALL_PREFIX "/@CMAKE_PROJECT_NAME@")
