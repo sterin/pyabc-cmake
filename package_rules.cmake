@@ -66,27 +66,24 @@ endfunction()
 
 
 function(_pyabc_run_hg src_dir var)
-
-    execute_process(COMMAND ${ARGN} WORKING_DIRECTORY ${src_dir} OUTPUT_VARIABLE tmp)
+    execute_process(COMMAND ${HG_EXECUTABLE} ${ARGN} WORKING_DIRECTORY ${src_dir} OUTPUT_VARIABLE tmp)
     string(STRIP ${tmp} tmp)
     set(${var} ${tmp} PARENT_SCOPE)
-    message("${var}: ${tmp}")
-
 endfunction()
 
 
 function(pyabc_get_version src_dir var)
 
-    _pyabc_run_hg(${src_dir} latesttag hg log -r . --template "{latesttag}" )
-    _pyabc_run_hg(${src_dir} status hg status -mardn --subrepos --rev="${latesttag}" )
+    _pyabc_run_hg(${src_dir} latesttag log -r . --template "{latesttag}" )
+    _pyabc_run_hg(${src_dir} status status -mardn --subrepos --rev="${latesttag}" )
 
 
     if( status STREQUAL ".hgtags" )
         set(${var} ${latesttag} PARENT_SCOPE)
     else()
-        _pyabc_run_hg(${src_dir} latesttagdistance hg log -r . --template "{latesttagdistance}" )
-        _pyabc_run_hg(${src_dir} latesttag hg log -r . --template "{latesttag}" )
-        _pyabc_run_hg(${src_dir} node hg log -r . --template "{node|short}" )
+        _pyabc_run_hg(${src_dir} latesttagdistance log -r . --template "{latesttagdistance}" )
+        _pyabc_run_hg(${src_dir} latesttag log -r . --template "{latesttag}" )
+        _pyabc_run_hg(${src_dir} node log -r . --template "{node|short}" )
         set(${var} ${latesttag}-${latesttagdistance}-${node} PARENT_SCOPE)
     endif()
 

@@ -7,7 +7,7 @@ find_package(PythonInterp 2.7 REQUIRED)
 
 
 # execute a process during the instllaiton stage
-function(install_execute_process)
+function(_pyabc_install_execute_process)
 
     cmake_parse_arguments(zz "" "WORKING_DIRECTORY" "COMMAND" ${ARGN})
 
@@ -21,17 +21,17 @@ function(install_execute_process)
         string(CONCAT cmd ${cmd} "WORKING_DIRECTORY ${zz_WORKING_DIRECTORY}")
     endif()
 
+    install(CODE "execute_process( COMMAND echo EXECUTING COMMAND: ${cmd} )")
     install(CODE "execute_process( COMMAND ${cmd} )")
-    install(CODE "execute_process( COMMAND echo ${cmd} )")
 
 endfunction()
 
 
 # make a directory during the installation stage
-function(install_mkdir dest dest_dir)
+function(_pyabc_install_mkdir dest dest_dir)
     set(dir "\${CMAKE_INSTALL_PREFIX}/${dest}")
     set(${dest_dir} ${dir} PARENT_SCOPE)
-    install_execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${dir})
+    _pyabc_install_execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${dir})
 
 endfunction()
 
@@ -39,7 +39,7 @@ endfunction()
 function(install_python_module path)
     get_filename_component(module ${path} NAME)
     install(DIRECTORY ${path} DESTINATION lib FILES_MATCHING PATTERN "*.py")
-    install_execute_process(COMMAND ${PYTHON_EXECUTABLE} -m compileall -q \${CMAKE_INSTALL_PREFIX}/lib/${module}/)
+    _pyabc_install_execute_process(COMMAND ${PYTHON_EXECUTABLE} -m compileall -q \${CMAKE_INSTALL_PREFIX}/lib/${module}/)
 endfunction()
 
 
@@ -58,6 +58,20 @@ function(_pyabc_target_location target location_target location_file)
     set(${location_target} ${tmp} PARENT_SCOPE)
     set(${location_file} ${CMAKE_CURRENT_BINARY_DIR}/${tmp}.txt PARENT_SCOPE)
 endfunction()
+
+# save repository version
+
+add_custom_target(
+    pyabc_install_version_file
+    ${HG_EXECUTABLE} log -r . --template "{latesttag}-{latesttagdistance}-{node}" \> ${CMAKE_CURRENT_BINARY_DIR}/pyabc_install_version_file.txt
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/VERSION_FILE.txt
+)
+
+add_dependencies(pyabc_installed_targets pyabc_install_version_file)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/pyabc_install_version_file.txt DESTINATION . RENAME VERSION)
+
 
 
 function(install_target target)
@@ -78,18 +92,18 @@ function(install_target target)
 
     add_dependencies(pyabc_installed_targets ${location_target})
 
-    install_mkdir(${dest} dest_dir)
+    _pyabc_install_mkdir(${dest} dest_dir)
 
     if(zz_RENAME)
         set(dest_dir "${dest_dir}/${zz_RENAME}")
     endif()
 
-    install_execute_process(COMMAND bash -c "cp $(< ${location_file}) ${dest_dir}")
+    _pyabc_install_execute_process(COMMAND bash -c "cp $(< ${location_file}) ${dest_dir}")
 
 endfunction()
 
 
-function(install_python_library dest)
+function(_pyabc_install_python_library dest)
 
     execute_process(
         COMMAND
@@ -98,8 +112,8 @@ function(install_python_library dest)
             lib_dir
     )
 
-    install_mkdir(${dest} dest_dir)
-    install_execute_process(COMMAND zip -q -R ${dest_dir}/python_library.zip "*.pyc" WORKING_DIRECTORY ${lib_dir})
+    _pyabc_install_mkdir(${dest} dest_dir)
+    _pyabc_install_execute_process(COMMAND zip -q -R ${dest_dir}/python_library.zip "*.pyc" WORKING_DIRECTORY ${lib_dir})
 
     execute_process(
         COMMAND
@@ -108,16 +122,24 @@ function(install_python_library dest)
             dylib_dir
     )
 
-    install_execute_process(COMMAND sh -c "cp -rf * ${dest_dir}" WORKING_DIRECTORY ${dylib_dir} )
+    _pyabc_install_execute_process(COMMAND bash -c "cp -rf * ${dest_dir}" WORKING_DIRECTORY ${dylib_dir} )
 
 endfunction()
 
 
-function(install_support_libraries exe dest)
+function(_pyabc_install_support_libraries exe dest)
 
     _pyabc_target_location(${exe} location_target location_file)
 
-    install_mkdir(${dest} dest_dir)
-    install_execute_process(COMMAND sh -c "cp $(ldd $(< ${location_file}) | grep -e libgcc -e libstdc++  | cut -f 2 -d'>' | cut -f 2 -d ' ') ${dest_dir}")
+    _pyabc_install_mkdir(${dest} dest_dir)
+    _pyabc_install_execute_process(COMMAND bash -c "cp $(ldd $(< ${location_file}) | grep -e libgcc -e libstdc++  | cut -f 2 -d'>' | cut -f 2 -d ' ') ${dest_dir}")
 
+endfunction()
+
+
+function(pyabc_install_support_libraries exe)
+    if(PYABC_INSTALL_SUPPORT_LIBRARIES)
+        _pyabc_install_python_library(lib)
+        _pyabc_install_support_libraries(${exe} lib)
+    endif()
 endfunction()
