@@ -1,6 +1,11 @@
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR})
 
-find_package(Readline)
+if(NOT PYABC_USE_NO_READLINE)
+    find_package(Readline)
+else()
+    set(READLINE_FOUND FALSE)
+endif()
+
 find_package(Hg REQUIRED)
 
 include(install_rules)
