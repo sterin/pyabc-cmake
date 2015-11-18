@@ -115,6 +115,8 @@ function(_pyabc_install_python_library dest)
     _pyabc_install_mkdir(${dest} dest_dir)
     _pyabc_install_execute_process(COMMAND zip -q -R ${dest_dir}/python_library.zip "*.pyc" WORKING_DIRECTORY ${lib_dir})
 
+    install(FILES ${lib_dir}/LICENSE.txt DESTINATION lib RENAME Python_LICENSE.txt )
+
     execute_process(
         COMMAND
             ${PYTHON_EXECUTABLE} -c "import sys; sys.stdout.write('%s/lib/python%s/lib-dynload'%(sys.exec_prefix,sys.version[:3]))"
