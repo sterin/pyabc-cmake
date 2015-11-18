@@ -1,9 +1,10 @@
 # seed the random number generator, for consistency between runs
 string(RANDOM RANDOM_SEED 0 "__dummy_random__")
 
-
 include(CMakeParseArguments)
+
 find_package(PythonInterp 2.7 REQUIRED)
+find_package(Hg REQUIRED)
 
 
 # execute a process during the instllaiton stage
@@ -45,9 +46,11 @@ endfunction()
 
 # ugly hack: cmake's install(TARGETS ...) only works on targets in the current directory. We create a custom target
 # that depends on all the targets specified by install_target, and make it a prerequisite of ALL
-
-set(target_name pyabc_installed_targets)
 add_custom_target(pyabc_installed_targets ALL)
+
+# and another target for tasks to be execute before install (write the locations of the targets into files, writing a version file, etc.)
+add_custom_target(pyabc_all_targets_for_install)
+_pyabc_install_execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR} --target pyabc_all_targets_for_install)
 
 # another ugly hack: the location of the target is not know when cmake is run
 # to workaround that, we add a new custom target whose command writes the target
@@ -60,18 +63,12 @@ function(_pyabc_target_location target location_target location_file)
 endfunction()
 
 # save repository version
-
-add_custom_target(
-    pyabc_install_version_file
-    ${HG_EXECUTABLE} log -r . --template "{latesttag}-{latesttagdistance}-{node}" \> ${CMAKE_CURRENT_BINARY_DIR}/pyabc_install_version_file.txt
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/VERSION_FILE.txt
+_pyabc_install_execute_process(
+    COMMAND
+        bash -c "${HG_EXECUTABLE} log -r . --template {latesttag}-{latesttagdistance}-{node} \> \${CMAKE_INSTALL_PREFIX}/VERSION.txt"
+    WORKING_DIRECTORY
+        ${CMAKE_CURRENT_SOURCE_DIR}
 )
-
-add_dependencies(pyabc_installed_targets pyabc_install_version_file)
-
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/pyabc_install_version_file.txt DESTINATION . RENAME VERSION)
-
 
 
 function(install_target target)
@@ -90,7 +87,7 @@ function(install_target target)
         BYPRODUCTS ${location_file}
     )
 
-    add_dependencies(pyabc_installed_targets ${location_target})
+    add_dependencies(pyabc_all_targets_for_install ${location_target})
 
     _pyabc_install_mkdir(${dest} dest_dir)
 
