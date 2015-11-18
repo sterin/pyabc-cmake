@@ -127,19 +127,23 @@ function(_pyabc_install_python_library dest)
 endfunction()
 
 
-function(_pyabc_install_support_libraries exe dest)
+function(pyabc_install_support_libraries)
 
-    _pyabc_target_location(${exe} location_target location_file)
-
-    _pyabc_install_mkdir(${dest} dest_dir)
-    _pyabc_install_execute_process(COMMAND bash -c "cp $(ldd $(< ${location_file}) | grep -e libgcc -e libstdc++  | cut -f 2 -d'>' | cut -f 2 -d ' ') ${dest_dir}")
-
-endfunction()
-
-
-function(pyabc_install_support_libraries exe)
     if(PYABC_INSTALL_SUPPORT_LIBRARIES)
+
         _pyabc_install_python_library(lib)
-        _pyabc_install_support_libraries(${exe} lib)
+
+        foreach(exe ${ARGN})
+            get_target_property(link_flags ${exe} LINK_FLAGS)
+            if(link_flags)
+                message("set_target_properties(${exe} PROPERTIES LINK_FLAGS \"${link_flags} -static-libgcc -static-libstdc++\")")
+                set_target_properties(${exe} PROPERTIES LINK_FLAGS "${link_flags} -static-libgcc -static-libstdc++")
+            else()
+                message("set_target_properties(${exe} PROPERTIES LINK_FLAGS \"-static-libgcc -static-libstdc++\")")
+                set_target_properties(${exe} PROPERTIES LINK_FLAGS "-static-libgcc -static-libstdc++")
+            endif()
+        endforeach()
+
     endif()
+
 endfunction()
