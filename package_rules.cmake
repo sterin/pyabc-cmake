@@ -45,6 +45,12 @@ function(pyabc_get_system_name var)
             endif()
         endforeach()
 
+        if( distro STREQUAL centos )
+            set(distro CentOS)
+        elseif(distro STREQUAL ubuntu)
+            set(distro Ubuntu)
+        endif()
+
         set(${var} ${distro}_${version} PARENT_SCOPE)
 
     elseif(EXISTS /etc/redhat-release)
