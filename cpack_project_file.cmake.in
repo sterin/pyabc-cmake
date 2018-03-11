@@ -1,4 +1,4 @@
-set(HG_EXECUTABLE @HG_EXECUTABLE@)
+set(GIT_EXECUTABLE @GIT_EXECUTABLE@)
 include(@CMAKE_CURRENT_SOURCE_DIR@/cmake/package_rules.cmake)
 
 pyabc_get_version(@CMAKE_CURRENT_SOURCE_DIR@ version)

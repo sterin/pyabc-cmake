@@ -4,7 +4,7 @@ string(RANDOM RANDOM_SEED 0 "__dummy_random__")
 include(CMakeParseArguments)
 
 find_package(PythonInterp 2.7 REQUIRED)
-find_package(Hg REQUIRED)
+find_package(Git REQUIRED)
 
 
 # execute a process during the instllaiton stage
@@ -65,7 +65,7 @@ endfunction()
 # save repository version
 _pyabc_install_execute_process(
     COMMAND
-        bash -c "${HG_EXECUTABLE} log -r . --template {latesttag}-{latesttagdistance}-{node} \> \${CMAKE_INSTALL_PREFIX}/VERSION.txt"
+        bash -c "${GIT_EXECUTABLE} describe --always --tags HEAD \> \${CMAKE_INSTALL_PREFIX}/VERSION.txt"
     WORKING_DIRECTORY
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
