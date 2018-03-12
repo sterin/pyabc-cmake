@@ -63,6 +63,14 @@ function(_pyabc_target_location target location_target location_file)
 endfunction()
 
 # save repository version
+
+_pyabc_install_execute_process(
+    COMMAND
+        ${CMAKE_COMMAND} -E make_directory "\${CMAKE_INSTALL_PREFIX}"
+    WORKING_DIRECTORY
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 _pyabc_install_execute_process(
     COMMAND
         bash -c "${GIT_EXECUTABLE} describe --always --tags HEAD \> \${CMAKE_INSTALL_PREFIX}/VERSION.txt"
@@ -70,6 +78,12 @@ _pyabc_install_execute_process(
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+_pyabc_install_execute_process(
+    COMMAND
+        bash -c "${GIT_EXECUTABLE} submodule--helper list \>\> \${CMAKE_INSTALL_PREFIX}/VERSION.txt"
+    WORKING_DIRECTORY
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
 function(install_target target)
 
