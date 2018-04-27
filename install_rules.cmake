@@ -43,6 +43,26 @@ function(install_python_module path)
     _pyabc_install_execute_process(COMMAND ${PYTHON_EXECUTABLE} -m compileall -q \${CMAKE_INSTALL_PREFIX}/lib/${module}/)
 endfunction()
 
+function(install_python_requirements file)
+    
+    get_filename_component(module ${file} NAME)
+    
+    if( NOT IS_ABSOLUTE ${file})
+        set(file ${CMAKE_CURRENT_SOURCE_DIR}/${file})
+    endif()
+    
+    set(requirements_file ${CMAKE_CURRENT_BINARY_DIR}/requirements.${module}.txt)
+    configure_file(${file} ${requirements_file})
+    
+    _pyabc_install_execute_process(
+        COMMAND 
+            ${PYTHON_EXECUTABLE} -m pip install
+                --compile
+                --requirement ${requirements_file} 
+                --target \${CMAKE_INSTALL_PREFIX}/lib
+    )
+endfunction()
+
 
 # ugly hack: cmake's install(TARGETS ...) only works on targets in the current directory. We create a custom target
 # that depends on all the targets specified by install_target, and make it a prerequisite of ALL
