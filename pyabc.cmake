@@ -6,8 +6,6 @@ else()
     set(READLINE_FOUND FALSE)
 endif()
 
-find_package(Hg REQUIRED)
-
 include(install_rules)
 
 set(CPACK_PROJECT_CONFIG_FILE ${CMAKE_CURRENT_BINARY_DIR}/cpack_project_file.cmake)
