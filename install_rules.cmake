@@ -22,7 +22,7 @@ function(_pyabc_install_execute_process)
         string(CONCAT cmd ${cmd} "WORKING_DIRECTORY ${zz_WORKING_DIRECTORY}")
     endif()
 
-    install(CODE "execute_process( COMMAND echo EXECUTING COMMAND: ${cmd} )")
+    install(CODE "execute_process( COMMAND echo EXECUTING: ${cmd} )")
     install(CODE "execute_process( COMMAND ${cmd} )")
 
 endfunction()
@@ -70,7 +70,7 @@ add_custom_target(pyabc_installed_targets ALL)
 
 # and another target for tasks to be execute before install (write the locations of the targets into files, writing a version file, etc.)
 add_custom_target(pyabc_all_targets_for_install)
-_pyabc_install_execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR} --target pyabc_all_targets_for_install)
+_pyabc_install_execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR} --config $<CONFIG> --target pyabc_all_targets_for_install)
 
 # another ugly hack: the location of the target is not know when cmake is run
 # to workaround that, we add a new custom target whose command writes the target
@@ -129,7 +129,11 @@ function(install_target target)
         set(dest_dir "${dest_dir}/${zz_RENAME}")
     endif()
 
-    _pyabc_install_execute_process(COMMAND bash -c "cp $(< ${location_file}) ${dest_dir}")
+    if( WIN32 )
+        _pyabc_install_execute_process(COMMAND powershell -Command "cp \$(Get-Content ${location_file}) ${dest_dir}")
+    else()
+        _pyabc_install_execute_process(COMMAND bash -c "cp $(< ${location_file}) ${dest_dir}")
+    endif()
 
 endfunction()
 
