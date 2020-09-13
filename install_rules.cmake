@@ -59,6 +59,7 @@ function(install_python_requirements file)
             ${PYTHON_EXECUTABLE} -m pip install
                 --compile
                 --requirement ${requirements_file} 
+                --system
                 --target \${CMAKE_INSTALL_PREFIX}/lib
     )
 endfunction()
